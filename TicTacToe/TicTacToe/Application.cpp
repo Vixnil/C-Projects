@@ -1,23 +1,46 @@
 #include <iostream>
 #include "GameBoard.h"
-#include "TTTDataTypes.h"
+
+typedef GameBoard::GamePiece GamePiece;
+typedef GameBoard::Coords Coords;
+typedef void(*AiDifficulty)(GameBoard&, GamePiece&);
+typedef void(*NumMod)(int&);
+typedef Coords(*BoardOrientation)(GameBoard&, int, int, GamePiece);
 
 Coords promptUserForCoord();
 
+Coords getWinningMove(GameBoard& gb, GamePiece playerPiece, int acceptableBlanks);
+
+template<NumMod mod>
+Coords getDiagMove(GameBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks);
+
+template<BoardOrientation board>
+Coords getStraightMove(GameBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks);
+
 bool isWinningPiece(GameBoard&, GamePiece);
-bool isDiagonalWin(GameBoard&, GamePiece);
-bool isHorizontalWin(GameBoard&, GamePiece);
-bool isVerticleWin(GameBoard&, GamePiece);
+
+template<NumMod modifier>
+bool isDiagonalWin(GameBoard&, GamePiece, int rowInit);
+
+template<BoardOrientation board>
+bool isStraightWin(GameBoard&, GamePiece, int rowNum, int colNum);
 
 void run2PlayerGame();
 void run1PlayerGame();
+
 void displayBoard(GameBoard&);
 void doPlayerTurn(GameBoard&, GamePiece);
 
-void doAiImpossible(GameBoard&, GamePiece);
-void doAiMedium(GameBoard&, GamePiece);
-void doAiEasy(GameBoard&, GamePiece);
-void doAiTurn(Difficulty, GameBoard&, GamePiece);
+void increamentNum(int&);
+void decreamentNum(int&);
+Coords rowTop(GameBoard&, int rowIndex, int colIndex, GamePiece);
+Coords colTop(GameBoard&, int rowIndex, int colIndex, GamePiece);
+
+void doAiImpossible(GameBoard&, GamePiece&);
+void doAiMedium(GameBoard&, GamePiece&);
+void doAiEasy(GameBoard&, GamePiece&);
+
+const Coords BAD_MOVE;
 
 int main()
 {
@@ -66,78 +89,116 @@ int main()
 
 bool isWinningPiece(GameBoard& gb, GamePiece piece)
 {
-	bool isWin = isHorizontalWin(gb, piece);
-	isWin = isWin || isVerticleWin(gb, piece);
-	isWin = isWin || isDiagonalWin(gb, piece);
+	bool isWin = isStraightWin<rowTop>(gb, piece, gb.GetNumRow(), gb.GetNumCol());
+	isWin = isWin || isStraightWin<colTop>(gb, piece, gb.GetNumCol(), gb.GetNumRow());
+	isWin = isWin || isDiagonalWin<increamentNum>(gb, piece, 0);
+	isWin = isWin || isDiagonalWin<decreamentNum>(gb, piece, gb.GetNumRow() - 1);
 
 	return isWin;
 }
 
-bool isDiagonalWin(GameBoard& gb, GamePiece piece)
+template<NumMod mod>
+Coords getDiagMove(GameBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks)
 {
-	int rowIndex = 0;
+	Coords winMove;
+
+	int rowIndex = rowInit;
+	int colIndex = 0;
+	int numBlank = 0;
+
+	do
+	{
+		if (gb.returnBoard()[rowIndex][colIndex] == GamePiece::BLANK)
+		{
+			if (numBlank < acceptableBlanks)
+			{
+				winMove.row = rowIndex;
+				winMove.col = colIndex;
+				numBlank++;
+			}
+			else
+			{
+				return BAD_MOVE;
+			}
+		}
+		else if (gb.returnBoard()[rowIndex][colIndex] != piece)
+		{
+			return BAD_MOVE;
+		}
+		mod(rowIndex);
+	} while (rowIndex < gb.GetNumRow() && ++colIndex < gb.GetNumCol());
+
+	return winMove;
+}
+
+template<BoardOrientation boardCheck>
+Coords getStraightMove(GameBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks)
+{
+	Coords winMove;
+
+	for (int rowIndex = 0; rowIndex < rowNum; rowIndex++)
+	{
+		int numFound = 0;
+		bool foundEnemy = false;
+
+		for (int colIndex = 0; colIndex < colNum; colIndex++)
+		{
+			Coords tempMove = boardCheck(gb, rowIndex, colIndex, piece);
+
+			if (tempMove != BAD_MOVE)
+			{
+				numFound++;
+			}
+			else
+			{
+				winMove = boardCheck(gb, rowIndex, colIndex, GamePiece::BLANK);
+
+				if (winMove == BAD_MOVE)
+				{
+					foundEnemy = true;
+					break;
+				}
+			}
+		}
+
+		if (!foundEnemy && numFound == (colNum - acceptableBlanks))
+		{
+			return winMove;
+		}
+	}
+
+	return BAD_MOVE;
+}
+
+template<NumMod mod>
+bool isDiagonalWin(GameBoard& gb, GamePiece piece, int rowInit)
+{
+	int rowIndex = rowInit;
 	int colIndex = 0;
 	int numFound = 0;
 
 	do
 	{
 		numFound = (gb.returnBoard()[rowIndex][colIndex] == piece) ? (numFound + 1) : numFound;
-	} while (++rowIndex < gb.GetNumRow() && ++colIndex < gb.GetNumCol());
+		mod(rowIndex);
+	} while (rowIndex < gb.GetNumRow() && ++colIndex < gb.GetNumCol());
 
-	if (numFound == gb.GetNumRow())
-	{
-		return true;
-	}
-
-	rowIndex--;
-	colIndex = 0;
-	numFound = 0;
-
-	do
-	{
-		numFound = (gb.returnBoard()[rowIndex][colIndex] == piece) ? (numFound + 1) : numFound;
-	} while (--rowIndex > -1 && ++colIndex < gb.GetNumCol());
-
-	if (numFound == gb.GetNumRow())
-	{
-		return true;
-	}
-
-	return false;
+	return numFound == gb.GetNumRow();
 }
 
-bool isHorizontalWin(GameBoard& gb, GamePiece piece)
+template<BoardOrientation board>
+bool isStraightWin(GameBoard& gb, GamePiece piece, int rowNum, int colNum)
 {
-	for (int rowIndex = 0; rowIndex < gb.GetNumRow(); rowIndex++)
+	for (int rowIndex = 0; rowIndex < rowNum; rowIndex++)
 	{
 		int numFound = 0;
 
-		for (int colIndex = 0; colIndex < gb.GetNumCol(); colIndex++)
+		for (int colIndex = 0; colIndex < colNum; colIndex++)
 		{
-			numFound = (gb.returnBoard()[rowIndex][colIndex] == piece)? (numFound + 1) : numFound;
+			numFound = (board(gb, rowIndex, colIndex, piece) != BAD_MOVE)? (numFound + 1) : numFound;
 		}
 
-		if (numFound == gb.GetNumCol())
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool isVerticleWin(GameBoard& gb, GamePiece piece)
-{
-	for (int colIndex = 0; colIndex < gb.GetNumCol(); colIndex++)
-	{
-		int numFound = 0;
-
-		for (int rowIndex = 0; rowIndex < gb.GetNumRow(); rowIndex++)
-		{
-			numFound = (gb.returnBoard()[rowIndex][colIndex] == piece) ? (numFound + 1) : numFound;
-		}
-
-		if (numFound == gb.GetNumRow())
+		if (numFound == colNum)
 		{
 			return true;
 		}
@@ -173,7 +234,7 @@ void displayBoard(GameBoard& gb)
 		std::cout << "| ";
 		for (int ci = 0; ci < gb.GetNumCol(); ci++)
 		{
-			const char* displayPiece = (board[ri][ci] == BLANK) ? "-" : (board[ri][ci] == Px) ? "X" : "O";
+			const char* displayPiece = (board[ri][ci] == GamePiece::BLANK) ? "-" : (board[ri][ci] == GamePiece::Px) ? "X" : "O";
 
 			if (ci + 1 == gb.GetNumCol())
 			{
@@ -234,7 +295,7 @@ void doPlayerTurn(GameBoard& gb, GamePiece playerPiece)
 	{
 		displayBoard(gb);
 
-		std::cout << "Player " << ((playerPiece == Px) ? "X" : "O") << " place your piece." << std::endl;
+		std::cout << "Player " << ((playerPiece == GamePiece::Px) ? "X" : "O") << " place your piece." << std::endl;
 
 		Coords selection = promptUserForCoord();
 
@@ -251,33 +312,79 @@ void doPlayerTurn(GameBoard& gb, GamePiece playerPiece)
 	} while (promptAgain);
 }
 
-void doAiTurn(Difficulty brainSize, GameBoard& gb, GamePiece playerPiece)
+Coords getWinningMove(GameBoard& gb, GamePiece playerPiece, int acceptableBlanks)
 {
-	if (brainSize == Easy)
+	Coords winMove = getDiagMove<increamentNum>(gb, playerPiece, 0, acceptableBlanks);
+
+	if (winMove == BAD_MOVE)
+	{
+		winMove = getDiagMove<decreamentNum>(gb, playerPiece, gb.GetNumRow() - 1, acceptableBlanks);
+
+		if (winMove == BAD_MOVE)
+		{
+			winMove = getStraightMove<rowTop>(gb, playerPiece, gb.GetNumRow(), gb.GetNumCol(), acceptableBlanks);
+
+			if (winMove == BAD_MOVE)
+			{
+				winMove = getStraightMove<colTop>(gb, playerPiece, gb.GetNumCol(), gb.GetNumRow(), acceptableBlanks);
+			}
+		}
+	}
+
+	return winMove;
+}
+
+void doAiImpossible(GameBoard& gb, GamePiece& playerPiece)
+{
+	Coords move = getWinningMove(gb, playerPiece, 1);
+
+	if (move == BAD_MOVE)
+	{
+		move = getWinningMove(gb, (playerPiece == GamePiece::Px) ? GamePiece::Po : GamePiece::Px, 1);
+
+		if (move == BAD_MOVE)
+		{
+			if (gb.returnBoard()[1][1] == GamePiece::BLANK)
+			{
+				move.col = 1;
+				move.row = 1;
+			}
+			else
+			{
+				move = getWinningMove(gb, playerPiece, 2);
+
+				if (move == BAD_MOVE)
+				{
+					move = getWinningMove(gb, (playerPiece == GamePiece::Px) ? GamePiece::Po : GamePiece::Px, 2);
+
+					if (move == BAD_MOVE)
+					{
+						doAiEasy(gb, playerPiece);
+						return;
+					}
+				}
+			}
+		}
+	}
+
+	gb.placePiece(move, playerPiece);
+}
+
+void doAiMedium(GameBoard& gb, GamePiece& playerPiece)
+{
+	Coords move = getWinningMove(gb, playerPiece, 1);
+
+	if (move == BAD_MOVE)
 	{
 		doAiEasy(gb, playerPiece);
+
+		return;
 	}
-	else if (brainSize == Medium)
-	{
-		doAiMedium(gb, playerPiece);
-	}
-	else if (brainSize == Impossible)
-	{
-		doAiImpossible(gb, playerPiece);
-	}
+
+	gb.placePiece(move, playerPiece);
 }
 
-void doAiImpossible(GameBoard& gb, GamePiece playerPiece)
-{
-
-}
-
-void doAiMedium(GameBoard& gb, GamePiece playerPiece)
-{
-
-}
-
-void doAiEasy(GameBoard& gb, GamePiece playerPiece)
+void doAiEasy(GameBoard& gb, GamePiece& playerPiece)
 {
 	Coords aiMove;
 	bool needToPlace = true;
@@ -296,26 +403,36 @@ void doAiEasy(GameBoard& gb, GamePiece playerPiece)
 	} while (needToPlace);
 }
 
-Difficulty promptUserForDifficulty()
+AiDifficulty promptUserForDifficulty()
 {
 	bool notValid = false;
 
 	do
 	{
-		std::cout << "Please select AI difficulty: " << std::endl << "Easy (E), Medium (M), Impossible (I)" << endl;
+		system("CLS");
+
+		std::cout << "Please select AI difficulty: " << std::endl << "Easy (E), Medium (M), Impossible (I)" << std::endl;
 		char input = std::cin.get();
+
+		std::cin.get();
 
 		if (input == 'E' || input == 'e')
 		{
-			return Easy;
+			return doAiEasy;
 		}
 		else if (input == 'M' || input == 'm')
 		{
-			return Medium;
+			return doAiMedium;
 		}
 		else if (input == 'I' || input == 'i')
 		{
-			return Impossible;
+			return doAiImpossible;
+		}
+		else
+		{
+			std::cout << "Not a valid input!" << std::endl << "..." << std::endl;
+			std::cin.get();
+			notValid = true;
 		}
 
 	} while (notValid);
@@ -323,8 +440,8 @@ Difficulty promptUserForDifficulty()
 
 void run2PlayerGame()
 {
-	GameBoard gb = GameBoard(3, 3, BLANK);
-	GamePiece currPlayer = Px;
+	GameBoard gb = GameBoard(3, 3, GamePiece::BLANK);
+	GamePiece currPlayer = GamePiece::Px;
 	bool runAgain = true;
 
 	do
@@ -334,7 +451,7 @@ void run2PlayerGame()
 		if (isWinningPiece(gb, currPlayer))
 		{
 			displayBoard(gb);
-			std::cout << "Player " << ((currPlayer == Px) ? "X" : "O") << " won!" << std::endl;
+			std::cout << "Player " << ((currPlayer == GamePiece::Px) ? "X" : "O") << " won!" << std::endl;
 			runAgain = false;
 		}
 
@@ -345,16 +462,16 @@ void run2PlayerGame()
 			runAgain = false;
 		}
 
-		currPlayer = (currPlayer == Px) ? Po : Px;
+		currPlayer = (currPlayer == GamePiece::Px) ? GamePiece::Po : GamePiece::Px;
 	} while (runAgain);
 }
 
 void run1PlayerGame()
 {
-	GameBoard gb = GameBoard(3, 3, BLANK);
-	GamePiece currPlayer = Px;
-	GamePiece human = ((rand() % 2) == 1)? Px : Po;
-	Difficulty brainSize = promptUserForDifficulty();
+	GameBoard gb = GameBoard(3, 3, GamePiece::BLANK);
+	GamePiece currPlayer = GamePiece::Px;
+	GamePiece human = ((rand() % 2) == 1)? GamePiece::Px : GamePiece::Po;
+	AiDifficulty doAiTurn = promptUserForDifficulty();
 	bool runAgain = true;
 
 	do
@@ -365,23 +482,58 @@ void run1PlayerGame()
 		}
 		else
 		{
-			doAiTurn(brainSize, gb, currPlayer);
+			doAiTurn(gb, currPlayer);
 		}
 
 		if (isWinningPiece(gb, currPlayer))
 		{
 			displayBoard(gb);
-			std::cout << "Player " << ((currPlayer == Px) ? "X" : "O") << " won!" << std::endl;
+			std::cout << "Player " << ((currPlayer == GamePiece::Px) ? "X" : "O") << " won!" << std::endl;
 			runAgain = false;
 		}
-
-		if (gb.isFull())
+		else if (gb.isFull())
 		{
 			displayBoard(gb);
 			std::cout << "Match ends in a tie!" << std::endl;
 			runAgain = false;
 		}
 
-		currPlayer = (currPlayer == Px) ? Po : Px;
+		currPlayer = (currPlayer == GamePiece::Px) ? GamePiece::Po : GamePiece::Px;
 	} while (runAgain);
+}
+
+void increamentNum(int& number)
+{
+	number++;
+}
+
+void decreamentNum(int& number)
+{
+	number--;
+}
+
+Coords rowTop(GameBoard& gb, int rowIndex, int colIndex, GamePiece value)
+{
+	Coords position;
+
+	if (gb.returnBoard()[rowIndex][colIndex] == value)
+	{
+		position.row = rowIndex;
+		position.col = colIndex;
+	}
+
+	return position;
+}
+
+Coords colTop(GameBoard& gb, int rowIndex, int colIndex, GamePiece value)
+{
+	Coords position;
+
+	if (gb.returnBoard()[colIndex][rowIndex] == value)
+	{
+		position.row = colIndex;
+		position.col = rowIndex;
+	}
+
+	return position;
 }
