@@ -4,7 +4,7 @@ class GameBoard
 {
 private:
 
-	int** board;
+	char** board;
 	const int rows;
 	const int cols;
 	const int defaultValue;
@@ -12,7 +12,7 @@ private:
 public:
 	enum GamePiece
 	{
-		BLANK = 0, Px, Po
+		BLANK = '-', Px = 'X', Po = 'O'
 	};
 
 	struct Coords
@@ -32,7 +32,7 @@ public:
 	};
 
 	GameBoard(int numRows, int numCols, GamePiece newDefault);
-	int** returnBoard() const;
+	char** returnBoard() const;
 	int GetNumRow() const;
 	int GetNumCol() const;
 	bool isValidCoords(Coords) const;

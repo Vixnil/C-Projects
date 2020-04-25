@@ -7,38 +7,31 @@ typedef void(*AiDifficulty)(GameBoard&, GamePiece&);
 typedef void(*NumMod)(int&);
 typedef Coords(*BoardOrientation)(GameBoard&, int, int, GamePiece);
 
-Coords promptUserForCoord();
-
+Coords promptUserForCoord(GameBoard&);
 Coords getWinningMove(GameBoard& gb, GamePiece playerPiece, int acceptableBlanks);
-
 template<NumMod mod>
 Coords getDiagMove(GameBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks);
-
 template<BoardOrientation board>
 Coords getStraightMove(GameBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks);
-
 bool isWinningPiece(GameBoard&, GamePiece);
-
 template<NumMod modifier>
 bool isDiagonalWin(GameBoard&, GamePiece, int rowInit);
-
 template<BoardOrientation board>
 bool isStraightWin(GameBoard&, GamePiece, int rowNum, int colNum);
-
 void run2PlayerGame();
 void run1PlayerGame();
-
 void displayBoard(GameBoard&);
 void doPlayerTurn(GameBoard&, GamePiece);
-
 void increamentNum(int&);
 void decreamentNum(int&);
 Coords rowTop(GameBoard&, int rowIndex, int colIndex, GamePiece);
 Coords colTop(GameBoard&, int rowIndex, int colIndex, GamePiece);
-
 void doAiImpossible(GameBoard&, GamePiece&);
 void doAiMedium(GameBoard&, GamePiece&);
 void doAiEasy(GameBoard&, GamePiece&);
+char promptUser(const char* message, const char* acceptableValues, bool clearbeforePrompt);
+int promptUser(const char* message, const int minRange, const int maxRange, bool clearbeforePrompt);
+void notifyUser(const char*);
 
 const Coords BAD_MOVE;
 
@@ -49,40 +42,26 @@ int main()
 	do
 	{
 		playAgain = false;
-
+		
 		system("CLS");
 
-		std::cout << "Welcome to TicTacToe!" << std::endl
-			<< "=====================" << std::endl
-			<< "Please select a gamemode:" << std::endl
-			<< "Single Player (1), or Two player (2)" << std::endl;
-		char option = std::cin.get();
+		notifyUser("Welcome to TicTacToe!\n=====================");
+		
+		int option = promptUser("Please select a gamemode: Single Player (1), or Two player (2)", 1, 2, false);
 
-		std::cin.get();
-
-		if (option == '1')
+		if (option == 1)
 		{
 			run1PlayerGame();
 		} 
-		else if (option == '2')
+		else if (option == 2)
 		{
 			run2PlayerGame();
 		}
-		else
-		{
-			std::cout << "Invalid option. Please use '1' or '2'" << std::endl << "..." << std::endl;
-			std::cin.get();
-			playAgain = true;
-			continue;
-		}
 
-		std::cout << "Play again?" << std::endl << "(Y/N)" << std::endl;
-		char response = std::cin.get();
-		std::cin.get();
+		char response = promptUser("Play Again?", "YyNn", false);
 
 		playAgain = (response == 'Y' || response == 'y');
 	} while (playAgain);
-	
 
 	return 0;
 }
@@ -209,7 +188,7 @@ bool isStraightWin(GameBoard& gb, GamePiece piece, int rowNum, int colNum)
 
 void displayBoard(GameBoard& gb)
 {
-	int** board = gb.returnBoard();
+	char** board = gb.returnBoard();
 
 	system("CLS");
 
@@ -234,15 +213,13 @@ void displayBoard(GameBoard& gb)
 		std::cout << "| ";
 		for (int ci = 0; ci < gb.GetNumCol(); ci++)
 		{
-			const char* displayPiece = (board[ri][ci] == GamePiece::BLANK) ? "-" : (board[ri][ci] == GamePiece::Px) ? "X" : "O";
-
 			if (ci + 1 == gb.GetNumCol())
 			{
-				std::cout << displayPiece << " ";
+				std::cout << (board[ri][ci]) << " ";
 			}
 			else
 			{
-				std::cout << displayPiece << " | ";
+				std::cout << (board[ri][ci]) << " | ";
 			}
 		}
 		std::cout << "|";
@@ -265,24 +242,12 @@ void displayBoard(GameBoard& gb)
 	}
 }
 
-Coords promptUserForCoord()
+Coords promptUserForCoord(GameBoard& gb)
 {
 	Coords response;
 
-	std::cout << "Enter row you want to place your piece." << std::endl;
-	char row = std::cin.get();
-
-	//Capture the escape character before getting new input.
-	std::cin.get();
-
-	std::cout << "Enter column you want to place your piece." << std::endl;
-	char col = std::cin.get();
-
-	//Capture the escape character
-	std::cin.get();
-
-	response.row = row - '1';
-	response.col = col - '1';
+	response.row = promptUser("Enter row you want to place your piece.", 1, gb.GetNumRow(), false) - 1;
+	response.col = promptUser("Enter column you want to place your piece.", 1, gb.GetNumRow(), false) - 1;
 
 	return response;
 }
@@ -295,14 +260,13 @@ void doPlayerTurn(GameBoard& gb, GamePiece playerPiece)
 	{
 		displayBoard(gb);
 
-		std::cout << "Player " << ((playerPiece == GamePiece::Px) ? "X" : "O") << " place your piece." << std::endl;
+		std::cout << "Player " << (char)playerPiece << " place your piece." << std::endl;
 
-		Coords selection = promptUserForCoord();
+		Coords selection = promptUserForCoord(gb);
 
 		if (!gb.isValidCoords(selection))
 		{
-			std::cout << "Provided coordinates are not valid!" << std::endl << "..." << std::endl;
-			std::cin.get();
+			notifyUser("Provided coordinates are not valid!");
 		}
 		else
 		{
@@ -409,12 +373,7 @@ AiDifficulty promptUserForDifficulty()
 
 	do
 	{
-		system("CLS");
-
-		std::cout << "Please select AI difficulty: " << std::endl << "Easy (E), Medium (M), Impossible (I)" << std::endl;
-		char input = std::cin.get();
-
-		std::cin.get();
+		char input = promptUser("Please select AI difficulty: Easy (E), Medium (M), Impossible (I)", "EeMmIi", true);
 
 		if (input == 'E' || input == 'e')
 		{
@@ -424,15 +383,9 @@ AiDifficulty promptUserForDifficulty()
 		{
 			return doAiMedium;
 		}
-		else if (input == 'I' || input == 'i')
-		{
-			return doAiImpossible;
-		}
 		else
 		{
-			std::cout << "Not a valid input!" << std::endl << "..." << std::endl;
-			std::cin.get();
-			notValid = true;
+			return doAiImpossible;
 		}
 
 	} while (notValid);
@@ -451,14 +404,14 @@ void run2PlayerGame()
 		if (isWinningPiece(gb, currPlayer))
 		{
 			displayBoard(gb);
-			std::cout << "Player " << ((currPlayer == GamePiece::Px) ? "X" : "O") << " won!" << std::endl;
+			std::cout << "Player " << (char)currPlayer << " won!" << std::endl;
 			runAgain = false;
 		}
 
 		if (gb.isFull())
 		{
 			displayBoard(gb);
-			std::cout << "Match ends in a tie!" << std::endl;
+			notifyUser("Match ends in a tie!");
 			runAgain = false;
 		}
 
@@ -488,13 +441,13 @@ void run1PlayerGame()
 		if (isWinningPiece(gb, currPlayer))
 		{
 			displayBoard(gb);
-			std::cout << "Player " << ((currPlayer == GamePiece::Px) ? "X" : "O") << " won!" << std::endl;
+			std::cout << "Player " << (char)currPlayer << std::endl;
 			runAgain = false;
 		}
 		else if (gb.isFull())
 		{
 			displayBoard(gb);
-			std::cout << "Match ends in a tie!" << std::endl;
+			notifyUser("Match ends in a tie!");
 			runAgain = false;
 		}
 
@@ -536,4 +489,85 @@ Coords colTop(GameBoard& gb, int rowIndex, int colIndex, GamePiece value)
 	}
 
 	return position;
+}
+
+char promptUser(const char* message, const char* acceptableValues, bool clearbeforePrompt)
+{
+	char userValue;
+
+	do
+	{
+		if (clearbeforePrompt)
+			system("CLS");
+
+		std::cout << message << std::endl;
+		std::cout << "Acceptable values: (";
+
+		for(int index = 0; acceptableValues[index] != '\0'; index++)
+		{
+			if (acceptableValues[index + 1] == '\0')
+			{
+				std::cout << acceptableValues[index] << ")" << std::endl;
+			}
+			else
+			{
+				std::cout << acceptableValues[index] << ", ";
+			}
+		}
+
+		userValue = std::cin.get();
+		std::cin.ignore();
+
+		for (int index = 0; acceptableValues[index] != '\0'; index++)
+		{
+			if (acceptableValues[index] == userValue)
+			{
+				return userValue;
+			}
+		}
+
+		notifyUser("Invalid user input!");
+		
+	} while (true);
+}
+
+int promptUser(const char* message, const int minRange, const int maxRange, bool clearbeforePrompt)
+{
+	int userValue;
+
+	do
+	{
+		if (clearbeforePrompt)
+			system("CLS");
+
+		std::cout << message << std::endl;
+		std::cout << "Acceptable values: (";
+
+		for (int index = minRange; index < maxRange; index++)
+		{
+			std::cout << index << ", ";
+		}
+
+		std::cout << maxRange << ")" << std::endl;
+		std::cin >> userValue;
+		std::cin.ignore();
+
+		if (minRange - 1 < userValue && userValue < maxRange + 1)
+		{
+			return userValue;
+		}
+		else
+		{
+			notifyUser("Invalid user input!");
+		}
+
+	} while (true);
+}
+
+void notifyUser(const char* message)
+{
+	std::cout << message << std::endl;
+	std::cout << "..." << std::endl;
+	std::cin;
+	std::cin.ignore();
 }
