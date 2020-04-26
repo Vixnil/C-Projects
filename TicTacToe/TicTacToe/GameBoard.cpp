@@ -3,11 +3,11 @@
 GameBoard::GameBoard(int numRows, int numCols, GamePiece newDefault) :
 	rows(numRows), cols(numCols), defaultValue(newDefault)
 {
-	board = new char*[rows];
+	board = new GamePiece *[rows];
 
 	for (int rowIndex = 0; rowIndex < rows; rowIndex++)
 	{
-		board[rowIndex] = new char[cols];
+		board[rowIndex] = new GamePiece[cols];
 	}
 
 	clearBoard();
@@ -68,7 +68,7 @@ int GameBoard::GetNumCol() const
 	return cols;
 }
 
-char** GameBoard::returnBoard() const
+GameBoard::GamePiece** GameBoard::returnBoard() const
 {
 	return board;
 }

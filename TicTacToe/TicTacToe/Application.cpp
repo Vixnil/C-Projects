@@ -1,5 +1,5 @@
 #include <iostream>
-#include "GameBoard.h"
+#include "TicTacToeBoard.h"
 #include "Instrumentor.h"
 
 #ifdef PROFILING
@@ -27,8 +27,8 @@ template<NumMod modifier>
 bool isDiagonalWin(GameBoard&, GamePiece, int rowInit);
 template<BoardOrientation board>
 bool isStraightWin(GameBoard&, GamePiece, int rowNum, int colNum);
-void run2PlayerGame();
-void run1PlayerGame();
+void run2PlayerGame(char);
+void run1PlayerGame(char);
 void displayBoard(GameBoard&);
 void doPlayerTurn(GameBoard&, GamePiece);
 void increamentNum(int&);
@@ -53,20 +53,35 @@ int main()
 	do
 	{
 		playAgain = false;
-		
+		 
 		system("CLS");
 
 		notifyUser("Welcome to TicTacToe!\n=====================");
 		
+		char sizeOption = promptUser("Please select a board size: Regular, Large, or Extreme", "RrLlEe", false);
+		char size = 0;
 		int option = promptUser("Please select a gamemode: Single Player (1), or Two player (2)", 1, 2, false);
+
+		if (sizeOption == 'R' || sizeOption == 'r')
+		{
+			size = 3;
+		}
+		else if (sizeOption == 'L' || sizeOption == 'l')
+		{
+			size = 5;
+		}
+		else if (sizeOption == 'E' || sizeOption == 'e')
+		{
+			size = 9;
+		}
 
 		if (option == 1)
 		{
-			run1PlayerGame();
+			run1PlayerGame(size);
 		} 
 		else if (option == 2)
 		{
-			run2PlayerGame();
+			run2PlayerGame(size);
 		}
 
 		char response = promptUser("Play Again?", "YyNn", false);
@@ -206,7 +221,7 @@ bool isStraightWin(GameBoard& gb, GamePiece piece, int rowNum, int colNum)
 void displayBoard(GameBoard& gb)
 {
 	PROFILE_FUNCTION();
-	char** board = gb.returnBoard();
+	GamePiece** board = gb.returnBoard();
 
 	system("CLS");
 
@@ -330,14 +345,19 @@ void doAiImpossible(GameBoard& gb, GamePiece& playerPiece)
 
 		if (move == BAD_MOVE)
 		{
-			if (gb.returnBoard()[1][1] == GamePiece::BLANK)
+			int middleRow = ((gb.GetNumRow() - 1) / 2);
+			int middleCol = ((gb.GetNumCol() - 1) / 2);
+			if (gb.returnBoard()[middleRow][middleCol] == GamePiece::BLANK)
 			{
-				move.col = 1;
-				move.row = 1;
+				move.col = middleCol;
+				move.row = middleRow;
 			}
 			else
 			{
-				move = getWinningMove(gb, playerPiece, 2);
+				int numBlanks = 2;
+
+				while(numBlanks < gb.GetNumRow() && move == BAD_MOVE)
+					move = getWinningMove(gb, playerPiece, numBlanks++);
 
 				if (move == BAD_MOVE)
 				{
@@ -416,11 +436,11 @@ AiDifficulty promptUserForDifficulty()
 	} while (notValid);
 }
 
-void run2PlayerGame()
+void run2PlayerGame(char size)
 {
 	PROFILE_FUNCTION();
-	GameBoard gb = GameBoard(3, 3, GamePiece::BLANK);
-	GamePiece currPlayer = GamePiece::Px;
+	GameBoard gb = GameBoard(size, size, GameBoard::BLANK);
+	GamePiece currPlayer = GameBoard::Px;
 	bool runAgain = true;
 
 	do
@@ -445,10 +465,10 @@ void run2PlayerGame()
 	} while (runAgain);
 }
 
-void run1PlayerGame()
+void run1PlayerGame(char size)
 {
 	PROFILE_FUNCTION();
-	GameBoard gb = GameBoard(3, 3, GamePiece::BLANK);
+	GameBoard gb = GameBoard(size, size, GamePiece::BLANK);
 	GamePiece currPlayer = GamePiece::Px;
 	GamePiece human = ((rand() % 2) == 1)? GamePiece::Px : GamePiece::Po;
 	AiDifficulty doAiTurn = promptUserForDifficulty();

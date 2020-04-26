@@ -2,18 +2,8 @@
 
 class GameBoard
 {
-private:
-
-	char** board;
-	const int rows;
-	const int cols;
-	const int defaultValue;
-
 public:
-	enum GamePiece
-	{
-		BLANK = '-', Px = 'X', Po = 'O'
-	};
+	enum GamePiece : char { BLANK = '-', Px = 'X', Po = 'O' };
 
 	struct Coords
 	{
@@ -32,12 +22,19 @@ public:
 	};
 
 	GameBoard(int numRows, int numCols, GamePiece newDefault);
-	char** returnBoard() const;
+	GamePiece** returnBoard() const;
 	int GetNumRow() const;
 	int GetNumCol() const;
-	bool isValidCoords(Coords) const;
+    bool isValidCoords(Coords) const;
 	bool isFull() const;
 	void clearBoard();
 	void placePiece(Coords, GamePiece);
 	~GameBoard();
+
+protected:
+
+	GamePiece** board;
+	const int rows;
+	const int cols;
+	const GamePiece defaultValue;
 };
