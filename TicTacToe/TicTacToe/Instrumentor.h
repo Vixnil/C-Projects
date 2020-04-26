@@ -20,6 +20,14 @@
 #include <fstream>
 
 #include <thread>
+#ifdef PROFILING
+#define PROFILE_SCOPE(name) InstrumentationTimer timer##_LINE_(name)
+#define PROFILE_FUNCTION() PROFILE_SCOPE(__FUNCSIG__)
+#else
+#define PROFILE_SCOPE(name)
+#define PROFILE_FUNCTION()
+#endif
+
 
 struct ProfileResult
 {

@@ -1,40 +1,109 @@
 #pragma once
 
+struct Coords
+{
+	int row = -1;
+	int col = -1;
+
+	bool operator==(Coords other)
+	{
+		return (this->row == other.row) && (this->col == other.col);
+	}
+
+	bool operator!=(Coords other)
+	{
+		return !(*this == other);
+	}
+};
+
+template <typename T>
 class GameBoard
 {
 public:
-	enum GamePiece : char { BLANK = '-', Px = 'X', Po = 'O' };
 
-	struct Coords
+	GameBoard(char numRows, char numCols, T newDefault) :
+		rows(numRows), cols(numCols), defaultValue(newDefault)
 	{
-		int row = -1;
-		int col = -1;
+		board = new T * [rows];
 
-		bool operator==(Coords other)
+		for (int rowIndex = 0; rowIndex < rows; rowIndex++)
 		{
-			return (this->row == other.row) && (this->col == other.col);
+			board[rowIndex] = new T[cols];
 		}
 
-		bool operator!=(Coords other)
-		{
-			return !(*this == other);
-		}
-	};
+		clearBoard();
+	}
 
-	GameBoard(int numRows, int numCols, GamePiece newDefault);
-	GamePiece** returnBoard() const;
-	int GetNumRow() const;
-	int GetNumCol() const;
-    bool isValidCoords(Coords) const;
-	bool isFull() const;
-	void clearBoard();
-	void placePiece(Coords, GamePiece);
-	~GameBoard();
+	void placePiece(Coords input, T piece)
+	{
+		board[input.row][input.col] = piece;
+	}
+
+	virtual bool isValidCoords(Coords input) const
+	{
+		bool isValid = (-1 < input.row && input.row < rows);
+		isValid = (isValid && (-1 < input.col && input.col < cols));
+
+		return isValid;
+	}
+
+	bool isFull(T piece) const
+	{
+		for (int ri = 0; ri < rows; ri++)
+		{
+			for (int ci = 0; ci < cols; ci++)
+			{
+				if (board[ri][ci] == piece)
+				{
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	void clearBoard()
+	{
+		for (int rowIndex = 0; rowIndex < rows; rowIndex++)
+		{
+			for (int colIndex = 0; colIndex < cols; colIndex++)
+			{
+				board[rowIndex][colIndex] = defaultValue;
+			}
+		}
+	}
+
+	int GetNumRow() const
+	{
+		return rows;
+	}
+
+	int GetNumCol() const
+	{
+		return cols;
+	}
+
+	T** returnBoard() const
+	{
+		return board;
+	}
+
+	~GameBoard()
+	{
+		for (int rowIndex = 0; rowIndex < rows; rowIndex++)
+		{
+			delete[] board[rowIndex];
+		}
+
+		delete[] board;
+	}
 
 protected:
 
-	GamePiece** board;
+	T** board;
 	const int rows;
 	const int cols;
-	const GamePiece defaultValue;
+	const T defaultValue;
+
 };

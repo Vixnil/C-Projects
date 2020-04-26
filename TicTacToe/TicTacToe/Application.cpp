@@ -2,42 +2,32 @@
 #include "TicTacToeBoard.h"
 #include "Instrumentor.h"
 
-#ifdef PROFILING
-#define PROFILE_SCOPE(name) InstrumentationTimer timer##_LINE_(name)
-#define PROFILE_FUNCTION() PROFILE_SCOPE(__FUNCSIG__)
-#else
-#define PROFILE_SCOPE(name)
-#define PROFILE_FUNCTION()
-#endif
-
-typedef GameBoard::GamePiece GamePiece;
-typedef GameBoard::Coords Coords;
-typedef void(*AiDifficulty)(GameBoard&, GamePiece&);
+typedef void(*AiDifficulty)(TTTBoard&, GamePiece&);
 typedef void(*NumMod)(int&);
-typedef Coords(*BoardOrientation)(GameBoard&, int, int, GamePiece);
+typedef Coords(*BoardOrientation)(TTTBoard&, int, int, GamePiece);
 
-Coords promptUserForCoord(GameBoard&);
-Coords getWinningMove(GameBoard& gb, GamePiece playerPiece, int acceptableBlanks);
+Coords promptUserForCoord(TTTBoard&);
+Coords getWinningMove(TTTBoard& gb, GamePiece playerPiece, int acceptableBlanks);
 template<NumMod mod>
-Coords getDiagMove(GameBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks);
+Coords getDiagMove(TTTBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks);
 template<BoardOrientation board>
-Coords getStraightMove(GameBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks);
-bool isWinningPiece(GameBoard&, GamePiece);
+Coords getStraightMove(TTTBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks);
+bool isWinningPiece(TTTBoard&, GamePiece);
 template<NumMod modifier>
-bool isDiagonalWin(GameBoard&, GamePiece, int rowInit);
+bool isDiagonalWin(TTTBoard&, GamePiece, int rowInit);
 template<BoardOrientation board>
-bool isStraightWin(GameBoard&, GamePiece, int rowNum, int colNum);
+bool isStraightWin(TTTBoard&, GamePiece, int rowNum, int colNum);
 void run2PlayerGame(char);
 void run1PlayerGame(char);
-void displayBoard(GameBoard&);
-void doPlayerTurn(GameBoard&, GamePiece);
+void displayBoard(TTTBoard&);
+void doPlayerTurn(TTTBoard&, GamePiece);
 void increamentNum(int&);
 void decreamentNum(int&);
-Coords rowTop(GameBoard&, int rowIndex, int colIndex, GamePiece);
-Coords colTop(GameBoard&, int rowIndex, int colIndex, GamePiece);
-void doAiImpossible(GameBoard&, GamePiece&);
-void doAiMedium(GameBoard&, GamePiece&);
-void doAiEasy(GameBoard&, GamePiece&);
+Coords rowTop(TTTBoard&, int rowIndex, int colIndex, GamePiece);
+Coords colTop(TTTBoard&, int rowIndex, int colIndex, GamePiece);
+void doAiImpossible(TTTBoard&, GamePiece&);
+void doAiMedium(TTTBoard&, GamePiece&);
+void doAiEasy(TTTBoard&, GamePiece&);
 char promptUser(const char* message, const char* acceptableValues, bool clearbeforePrompt);
 int promptUser(const char* message, const int minRange, const int maxRange, bool clearbeforePrompt);
 void notifyUser(const char*);
@@ -93,7 +83,7 @@ int main()
 	return 0;
 }
 
-bool isWinningPiece(GameBoard& gb, GamePiece piece)
+bool isWinningPiece(TTTBoard& gb, GamePiece piece)
 {
 	PROFILE_FUNCTION();
 	bool isWin = isStraightWin<rowTop>(gb, piece, gb.GetNumRow(), gb.GetNumCol());
@@ -105,7 +95,7 @@ bool isWinningPiece(GameBoard& gb, GamePiece piece)
 }
 
 template<NumMod mod>
-Coords getDiagMove(GameBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks)
+Coords getDiagMove(TTTBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks)
 {
 	PROFILE_FUNCTION();
 	Coords winMove;
@@ -116,7 +106,7 @@ Coords getDiagMove(GameBoard& gb, GamePiece piece, int rowInit, int acceptableBl
 
 	do
 	{
-		if (gb.returnBoard()[rowIndex][colIndex] == GamePiece::BLANK)
+		if (gb.returnBoard()[rowIndex][colIndex] == BLANK)
 		{
 			if (numBlank < acceptableBlanks)
 			{
@@ -140,7 +130,7 @@ Coords getDiagMove(GameBoard& gb, GamePiece piece, int rowInit, int acceptableBl
 }
 
 template<BoardOrientation boardCheck>
-Coords getStraightMove(GameBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks)
+Coords getStraightMove(TTTBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks)
 {
 	PROFILE_FUNCTION();
 	Coords winMove;
@@ -160,7 +150,7 @@ Coords getStraightMove(GameBoard& gb, GamePiece piece, int rowNum, int colNum, i
 			}
 			else
 			{
-				winMove = boardCheck(gb, rowIndex, colIndex, GamePiece::BLANK);
+				winMove = boardCheck(gb, rowIndex, colIndex, BLANK);
 
 				if (winMove == BAD_MOVE)
 				{
@@ -180,7 +170,7 @@ Coords getStraightMove(GameBoard& gb, GamePiece piece, int rowNum, int colNum, i
 }
 
 template<NumMod mod>
-bool isDiagonalWin(GameBoard& gb, GamePiece piece, int rowInit)
+bool isDiagonalWin(TTTBoard& gb, GamePiece piece, int rowInit)
 {
 	PROFILE_FUNCTION();
 	int rowIndex = rowInit;
@@ -197,7 +187,7 @@ bool isDiagonalWin(GameBoard& gb, GamePiece piece, int rowInit)
 }
 
 template<BoardOrientation board>
-bool isStraightWin(GameBoard& gb, GamePiece piece, int rowNum, int colNum)
+bool isStraightWin(TTTBoard& gb, GamePiece piece, int rowNum, int colNum)
 {
 	PROFILE_FUNCTION();
 	for (int rowIndex = 0; rowIndex < rowNum; rowIndex++)
@@ -218,7 +208,7 @@ bool isStraightWin(GameBoard& gb, GamePiece piece, int rowNum, int colNum)
 	return false;
 }
 
-void displayBoard(GameBoard& gb)
+void displayBoard(TTTBoard& gb)
 {
 	PROFILE_FUNCTION();
 	GamePiece** board = gb.returnBoard();
@@ -275,7 +265,7 @@ void displayBoard(GameBoard& gb)
 	}
 }
 
-Coords promptUserForCoord(GameBoard& gb)
+Coords promptUserForCoord(TTTBoard& gb)
 {
 	PROFILE_FUNCTION();
 	Coords response;
@@ -286,7 +276,7 @@ Coords promptUserForCoord(GameBoard& gb)
 	return response;
 }
 
-void doPlayerTurn(GameBoard& gb, GamePiece playerPiece)
+void doPlayerTurn(TTTBoard& gb, GamePiece playerPiece)
 {
 	PROFILE_FUNCTION();
 	bool promptAgain = true;
@@ -311,7 +301,7 @@ void doPlayerTurn(GameBoard& gb, GamePiece playerPiece)
 	} while (promptAgain);
 }
 
-Coords getWinningMove(GameBoard& gb, GamePiece playerPiece, int acceptableBlanks)
+Coords getWinningMove(TTTBoard& gb, GamePiece playerPiece, int acceptableBlanks)
 {
 	PROFILE_FUNCTION();
 	Coords winMove = getDiagMove<increamentNum>(gb, playerPiece, 0, acceptableBlanks);
@@ -334,20 +324,20 @@ Coords getWinningMove(GameBoard& gb, GamePiece playerPiece, int acceptableBlanks
 	return winMove;
 }
 
-void doAiImpossible(GameBoard& gb, GamePiece& playerPiece)
+void doAiImpossible(TTTBoard& gb, GamePiece& playerPiece)
 {
 	PROFILE_FUNCTION();
 	Coords move = getWinningMove(gb, playerPiece, 1);
 
 	if (move == BAD_MOVE)
 	{
-		move = getWinningMove(gb, (playerPiece == GamePiece::Px) ? GamePiece::Po : GamePiece::Px, 1);
+		move = getWinningMove(gb, (playerPiece == Px) ? Po : Px, 1);
 
 		if (move == BAD_MOVE)
 		{
 			int middleRow = ((gb.GetNumRow() - 1) / 2);
 			int middleCol = ((gb.GetNumCol() - 1) / 2);
-			if (gb.returnBoard()[middleRow][middleCol] == GamePiece::BLANK)
+			if (gb.returnBoard()[middleRow][middleCol] == BLANK)
 			{
 				move.col = middleCol;
 				move.row = middleRow;
@@ -361,7 +351,7 @@ void doAiImpossible(GameBoard& gb, GamePiece& playerPiece)
 
 				if (move == BAD_MOVE)
 				{
-					move = getWinningMove(gb, (playerPiece == GamePiece::Px) ? GamePiece::Po : GamePiece::Px, 2);
+					move = getWinningMove(gb, (playerPiece == Px) ? Po : Px, 2);
 
 					if (move == BAD_MOVE)
 					{
@@ -376,7 +366,7 @@ void doAiImpossible(GameBoard& gb, GamePiece& playerPiece)
 	gb.placePiece(move, playerPiece);
 }
 
-void doAiMedium(GameBoard& gb, GamePiece& playerPiece)
+void doAiMedium(TTTBoard& gb, GamePiece& playerPiece)
 {
 	PROFILE_FUNCTION();
 	Coords move = getWinningMove(gb, playerPiece, 1);
@@ -391,7 +381,7 @@ void doAiMedium(GameBoard& gb, GamePiece& playerPiece)
 	gb.placePiece(move, playerPiece);
 }
 
-void doAiEasy(GameBoard& gb, GamePiece& playerPiece)
+void doAiEasy(TTTBoard& gb, GamePiece& playerPiece)
 {
 	PROFILE_FUNCTION();
 	Coords aiMove;
@@ -439,8 +429,8 @@ AiDifficulty promptUserForDifficulty()
 void run2PlayerGame(char size)
 {
 	PROFILE_FUNCTION();
-	GameBoard gb = GameBoard(size, size, GameBoard::BLANK);
-	GamePiece currPlayer = GameBoard::Px;
+	TTTBoard gb = TTTBoard(size, size, BLANK);
+	GamePiece currPlayer = Px;
 	bool runAgain = true;
 
 	do
@@ -450,7 +440,7 @@ void run2PlayerGame(char size)
 		if (isWinningPiece(gb, currPlayer))
 		{
 			displayBoard(gb);
-			std::cout << "Player " << (char)currPlayer << " won!" << std::endl;
+			std::cout << "Player " << currPlayer << " won!" << std::endl;
 			runAgain = false;
 		}
 
@@ -461,16 +451,16 @@ void run2PlayerGame(char size)
 			runAgain = false;
 		}
 
-		currPlayer = (currPlayer == GamePiece::Px) ? GamePiece::Po : GamePiece::Px;
+		currPlayer = (currPlayer == Px) ? Po : Px;
 	} while (runAgain);
 }
 
 void run1PlayerGame(char size)
 {
 	PROFILE_FUNCTION();
-	GameBoard gb = GameBoard(size, size, GamePiece::BLANK);
-	GamePiece currPlayer = GamePiece::Px;
-	GamePiece human = ((rand() % 2) == 1)? GamePiece::Px : GamePiece::Po;
+	TTTBoard gb = TTTBoard(size, size, BLANK);
+	GamePiece currPlayer = Px;
+	GamePiece human = ((rand() % 2) == 1)? Px : Po;
 	AiDifficulty doAiTurn = promptUserForDifficulty();
 	bool runAgain = true;
 
@@ -498,7 +488,7 @@ void run1PlayerGame(char size)
 			runAgain = false;
 		}
 
-		currPlayer = (currPlayer == GamePiece::Px) ? GamePiece::Po : GamePiece::Px;
+		currPlayer = (currPlayer == Px) ? Po : Px;
 	} while (runAgain);
 }
 
@@ -512,7 +502,7 @@ void decreamentNum(int& number)
 	number--;
 }
 
-Coords rowTop(GameBoard& gb, int rowIndex, int colIndex, GamePiece value)
+Coords rowTop(TTTBoard& gb, int rowIndex, int colIndex, GamePiece value)
 {
 	Coords position;
 
@@ -525,7 +515,7 @@ Coords rowTop(GameBoard& gb, int rowIndex, int colIndex, GamePiece value)
 	return position;
 }
 
-Coords colTop(GameBoard& gb, int rowIndex, int colIndex, GamePiece value)
+Coords colTop(TTTBoard& gb, int rowIndex, int colIndex, GamePiece value)
 {
 	Coords position;
 
