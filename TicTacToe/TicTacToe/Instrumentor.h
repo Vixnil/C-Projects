@@ -38,7 +38,7 @@ class Instrumentor
 private:
     InstrumentationSession* m_CurrentSession;
     std::ofstream m_OutputStream;
-    int m_ProfileCount;
+    unsigned int m_ProfileCount;
 public:
     Instrumentor()
         : m_CurrentSession(nullptr), m_ProfileCount(0)

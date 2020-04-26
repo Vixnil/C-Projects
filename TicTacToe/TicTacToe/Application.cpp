@@ -1,5 +1,14 @@
 #include <iostream>
 #include "GameBoard.h"
+#include "Instrumentor.h"
+
+#ifdef PROFILING
+#define PROFILE_SCOPE(name) InstrumentationTimer timer##_LINE_(name)
+#define PROFILE_FUNCTION() PROFILE_SCOPE(__FUNCSIG__)
+#else
+#define PROFILE_SCOPE(name)
+#define PROFILE_FUNCTION()
+#endif
 
 typedef GameBoard::GamePiece GamePiece;
 typedef GameBoard::Coords Coords;
@@ -37,6 +46,8 @@ const Coords BAD_MOVE;
 
 int main()
 {
+	Instrumentor::Get().BeginSession("TicTacToeLifetime");
+	PROFILE_FUNCTION();
 	bool playAgain = false;
 
 	do
@@ -63,11 +74,13 @@ int main()
 		playAgain = (response == 'Y' || response == 'y');
 	} while (playAgain);
 
+	Instrumentor::Get().EndSession();
 	return 0;
 }
 
 bool isWinningPiece(GameBoard& gb, GamePiece piece)
 {
+	PROFILE_FUNCTION();
 	bool isWin = isStraightWin<rowTop>(gb, piece, gb.GetNumRow(), gb.GetNumCol());
 	isWin = isWin || isStraightWin<colTop>(gb, piece, gb.GetNumCol(), gb.GetNumRow());
 	isWin = isWin || isDiagonalWin<increamentNum>(gb, piece, 0);
@@ -79,6 +92,7 @@ bool isWinningPiece(GameBoard& gb, GamePiece piece)
 template<NumMod mod>
 Coords getDiagMove(GameBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks)
 {
+	PROFILE_FUNCTION();
 	Coords winMove;
 
 	int rowIndex = rowInit;
@@ -113,6 +127,7 @@ Coords getDiagMove(GameBoard& gb, GamePiece piece, int rowInit, int acceptableBl
 template<BoardOrientation boardCheck>
 Coords getStraightMove(GameBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks)
 {
+	PROFILE_FUNCTION();
 	Coords winMove;
 
 	for (int rowIndex = 0; rowIndex < rowNum; rowIndex++)
@@ -152,6 +167,7 @@ Coords getStraightMove(GameBoard& gb, GamePiece piece, int rowNum, int colNum, i
 template<NumMod mod>
 bool isDiagonalWin(GameBoard& gb, GamePiece piece, int rowInit)
 {
+	PROFILE_FUNCTION();
 	int rowIndex = rowInit;
 	int colIndex = 0;
 	int numFound = 0;
@@ -168,6 +184,7 @@ bool isDiagonalWin(GameBoard& gb, GamePiece piece, int rowInit)
 template<BoardOrientation board>
 bool isStraightWin(GameBoard& gb, GamePiece piece, int rowNum, int colNum)
 {
+	PROFILE_FUNCTION();
 	for (int rowIndex = 0; rowIndex < rowNum; rowIndex++)
 	{
 		int numFound = 0;
@@ -188,6 +205,7 @@ bool isStraightWin(GameBoard& gb, GamePiece piece, int rowNum, int colNum)
 
 void displayBoard(GameBoard& gb)
 {
+	PROFILE_FUNCTION();
 	char** board = gb.returnBoard();
 
 	system("CLS");
@@ -244,6 +262,7 @@ void displayBoard(GameBoard& gb)
 
 Coords promptUserForCoord(GameBoard& gb)
 {
+	PROFILE_FUNCTION();
 	Coords response;
 
 	response.row = promptUser("Enter row you want to place your piece.", 1, gb.GetNumRow(), false) - 1;
@@ -254,6 +273,7 @@ Coords promptUserForCoord(GameBoard& gb)
 
 void doPlayerTurn(GameBoard& gb, GamePiece playerPiece)
 {
+	PROFILE_FUNCTION();
 	bool promptAgain = true;
 
 	do
@@ -278,6 +298,7 @@ void doPlayerTurn(GameBoard& gb, GamePiece playerPiece)
 
 Coords getWinningMove(GameBoard& gb, GamePiece playerPiece, int acceptableBlanks)
 {
+	PROFILE_FUNCTION();
 	Coords winMove = getDiagMove<increamentNum>(gb, playerPiece, 0, acceptableBlanks);
 
 	if (winMove == BAD_MOVE)
@@ -300,6 +321,7 @@ Coords getWinningMove(GameBoard& gb, GamePiece playerPiece, int acceptableBlanks
 
 void doAiImpossible(GameBoard& gb, GamePiece& playerPiece)
 {
+	PROFILE_FUNCTION();
 	Coords move = getWinningMove(gb, playerPiece, 1);
 
 	if (move == BAD_MOVE)
@@ -336,6 +358,7 @@ void doAiImpossible(GameBoard& gb, GamePiece& playerPiece)
 
 void doAiMedium(GameBoard& gb, GamePiece& playerPiece)
 {
+	PROFILE_FUNCTION();
 	Coords move = getWinningMove(gb, playerPiece, 1);
 
 	if (move == BAD_MOVE)
@@ -350,6 +373,7 @@ void doAiMedium(GameBoard& gb, GamePiece& playerPiece)
 
 void doAiEasy(GameBoard& gb, GamePiece& playerPiece)
 {
+	PROFILE_FUNCTION();
 	Coords aiMove;
 	bool needToPlace = true;
 
@@ -369,6 +393,7 @@ void doAiEasy(GameBoard& gb, GamePiece& playerPiece)
 
 AiDifficulty promptUserForDifficulty()
 {
+	PROFILE_FUNCTION();
 	bool notValid = false;
 
 	do
@@ -393,6 +418,7 @@ AiDifficulty promptUserForDifficulty()
 
 void run2PlayerGame()
 {
+	PROFILE_FUNCTION();
 	GameBoard gb = GameBoard(3, 3, GamePiece::BLANK);
 	GamePiece currPlayer = GamePiece::Px;
 	bool runAgain = true;
@@ -421,6 +447,7 @@ void run2PlayerGame()
 
 void run1PlayerGame()
 {
+	PROFILE_FUNCTION();
 	GameBoard gb = GameBoard(3, 3, GamePiece::BLANK);
 	GamePiece currPlayer = GamePiece::Px;
 	GamePiece human = ((rand() % 2) == 1)? GamePiece::Px : GamePiece::Po;
@@ -493,6 +520,7 @@ Coords colTop(GameBoard& gb, int rowIndex, int colIndex, GamePiece value)
 
 char promptUser(const char* message, const char* acceptableValues, bool clearbeforePrompt)
 {
+	PROFILE_FUNCTION();
 	char userValue;
 
 	do
@@ -533,6 +561,7 @@ char promptUser(const char* message, const char* acceptableValues, bool clearbef
 
 int promptUser(const char* message, const int minRange, const int maxRange, bool clearbeforePrompt)
 {
+	PROFILE_FUNCTION();
 	int userValue;
 
 	do
@@ -566,6 +595,7 @@ int promptUser(const char* message, const int minRange, const int maxRange, bool
 
 void notifyUser(const char* message)
 {
+	PROFILE_FUNCTION();
 	std::cout << message << std::endl;
 	std::cout << "..." << std::endl;
 	std::cin;

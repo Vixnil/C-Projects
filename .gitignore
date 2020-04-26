@@ -31,10 +31,13 @@
 *.out
 *.app
 
-#Compiled code in projects
+# Compiled code in projects
 /*/bin/*
 /*/Intermediate/*
 
-#Visual Studio temp files
+# Visual Studio temp files
 /*/.vs/*
+ 
+# Logging and performance files
+*.json
 
