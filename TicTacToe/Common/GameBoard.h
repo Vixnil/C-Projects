@@ -24,19 +24,14 @@ public:
 	GameBoard(char numRows, char numCols, T newDefault) :
 		rows(numRows), cols(numCols), defaultValue(newDefault)
 	{
-		board = new T * [rows];
-
-		for (int rowIndex = 0; rowIndex < rows; rowIndex++)
-		{
-			board[rowIndex] = new T[cols];
-		}
+		board = new T[rows * cols];
 
 		clearBoard();
 	}
 
 	void placePiece(Coords input, T piece)
 	{
-		board[input.row][input.col] = piece;
+		board[(input.row * rows) + input.col] = piece;
 	}
 
 	virtual bool isValidCoords(Coords input) const
@@ -53,7 +48,7 @@ public:
 		{
 			for (int ci = 0; ci < cols; ci++)
 			{
-				if (board[ri][ci] == piece)
+				if (getAt(ri, ci) == piece)
 				{
 					return false;
 				}
@@ -65,11 +60,16 @@ public:
 
 	void clearBoard()
 	{
+		Coords loc;
+
 		for (int rowIndex = 0; rowIndex < rows; rowIndex++)
 		{
+			loc.row = rowIndex;
+
 			for (int colIndex = 0; colIndex < cols; colIndex++)
 			{
-				board[rowIndex][colIndex] = defaultValue;
+				loc.col = colIndex; 
+				placePiece(loc, defaultValue);
 			}
 		}
 	}
@@ -84,24 +84,20 @@ public:
 		return cols;
 	}
 
-	T getAt(int row, int col)
+	T getAt(int row, int col) const
 	{
-		return board[row][col];
+		return board[(row * rows) + col];
 	}
 
 	~GameBoard()
 	{
-		for (int rowIndex = 0; rowIndex < rows; rowIndex++)
-		{
-			delete[] board[rowIndex];
-		}
-
 		delete[] board;
 	}
 
 protected:
 
-	T** board;
+
+	T* board;
 	const int rows;
 	const int cols;
 	const T defaultValue;

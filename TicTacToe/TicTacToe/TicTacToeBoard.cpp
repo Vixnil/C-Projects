@@ -11,7 +11,7 @@ bool TTTBoard::isValidCoords(Coords input) const
 
 	if (isValid)
 	{
-		isValid = board[input.row][input.col] == BLANK;
+		isValid = (getAt(input.row, input.col) == BLANK);
 	}
 
 	return isValid;

@@ -451,7 +451,7 @@ AiDifficulty promptUserForDifficulty()
 void run2PlayerGame(char size)
 {
 	PROFILE_FUNCTION();
-	TTTBoard gb = TTTBoard(size, size, BLANK);
+	TTTBoard gb(size, size, BLANK);
 	GamePiece currPlayer = Px;
 	bool runAgain = true;
 
