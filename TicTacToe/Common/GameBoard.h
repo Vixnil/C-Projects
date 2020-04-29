@@ -84,9 +84,9 @@ public:
 		return cols;
 	}
 
-	T** returnBoard() const
+	T getAt(int row, int col)
 	{
-		return board;
+		return board[row][col];
 	}
 
 	~GameBoard()

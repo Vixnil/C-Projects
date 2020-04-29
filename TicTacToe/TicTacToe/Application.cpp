@@ -106,7 +106,7 @@ Coords getDiagMove(TTTBoard& gb, GamePiece piece, int rowInit, int acceptableBla
 
 	do
 	{
-		if (gb.returnBoard()[rowIndex][colIndex] == BLANK)
+		if (gb.getAt(rowIndex, colIndex) == BLANK)
 		{
 			if (numBlank < acceptableBlanks)
 			{
@@ -119,7 +119,7 @@ Coords getDiagMove(TTTBoard& gb, GamePiece piece, int rowInit, int acceptableBla
 				return BAD_MOVE;
 			}
 		}
-		else if (gb.returnBoard()[rowIndex][colIndex] != piece)
+		else if (gb.getAt(rowIndex, colIndex) != piece)
 		{
 			return BAD_MOVE;
 		}
@@ -179,7 +179,7 @@ bool isDiagonalWin(TTTBoard& gb, GamePiece piece, int rowInit)
 
 	do
 	{
-		numFound = (gb.returnBoard()[rowIndex][colIndex] == piece) ? (numFound + 1) : numFound;
+		numFound = (gb.getAt(rowIndex, colIndex) == piece) ? (numFound + 1) : numFound;
 		mod(rowIndex);
 	} while (rowIndex < gb.GetNumRow() && ++colIndex < gb.GetNumCol());
 
@@ -211,7 +211,6 @@ bool isStraightWin(TTTBoard& gb, GamePiece piece, int rowNum, int colNum)
 void displayBoard(TTTBoard& gb)
 {
 	PROFILE_FUNCTION();
-	GamePiece** board = gb.returnBoard();
 
 	system("CLS");
 
@@ -238,11 +237,11 @@ void displayBoard(TTTBoard& gb)
 		{
 			if (ci + 1 == gb.GetNumCol())
 			{
-				std::cout << (board[ri][ci]) << " ";
+				std::cout << (gb.getAt(ri, ci)) << " ";
 			}
 			else
 			{
-				std::cout << (board[ri][ci]) << " | ";
+				std::cout << (gb.getAt(ri, ci)) << " | ";
 			}
 		}
 		std::cout << "|";
@@ -285,7 +284,7 @@ void doPlayerTurn(TTTBoard& gb, GamePiece playerPiece)
 	{
 		displayBoard(gb);
 
-		std::cout << "Player " << (char)playerPiece << " place your piece." << std::endl;
+		std::cout << "Player " << playerPiece << " place your piece." << std::endl;
 
 		Coords selection = promptUserForCoord(gb);
 
@@ -337,13 +336,36 @@ void doAiImpossible(TTTBoard& gb, GamePiece& playerPiece)
 		{
 			int middleRow = ((gb.GetNumRow() - 1) / 2);
 			int middleCol = ((gb.GetNumCol() - 1) / 2);
-			if (gb.returnBoard()[middleRow][middleCol] == BLANK)
+			if (gb.getAt(middleRow, middleCol) == BLANK)
 			{
 				move.col = middleCol;
 				move.row = middleRow;
 			}
 			else
 			{
+				move.row = 0;
+				move.col = 0;
+
+				if (!gb.isValidCoords(move))
+				{
+					move.row = gb.GetNumRow() - 1;
+
+					if (!gb.isValidCoords(move))
+					{
+						move.col = gb.GetNumCol() - 1;
+
+						if (!gb.isValidCoords(move))
+						{
+							move.row = 0;
+
+							if (!gb.isValidCoords(move))
+							{
+								move = BAD_MOVE;
+							}
+						}
+					}
+				}
+
 				int numBlanks = 2;
 
 				while(numBlanks < gb.GetNumRow() && move == BAD_MOVE)
@@ -506,7 +528,7 @@ Coords rowTop(TTTBoard& gb, int rowIndex, int colIndex, GamePiece value)
 {
 	Coords position;
 
-	if (gb.returnBoard()[rowIndex][colIndex] == value)
+	if (gb.getAt(rowIndex, colIndex) == value)
 	{
 		position.row = rowIndex;
 		position.col = colIndex;
@@ -519,7 +541,7 @@ Coords colTop(TTTBoard& gb, int rowIndex, int colIndex, GamePiece value)
 {
 	Coords position;
 
-	if (gb.returnBoard()[colIndex][rowIndex] == value)
+	if (gb.getAt(colIndex, rowIndex) == value)
 	{
 		position.row = colIndex;
 		position.col = rowIndex;
