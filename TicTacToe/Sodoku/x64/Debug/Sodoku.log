@@ -1,0 +1,4 @@
+﻿  SodokuBoard.cpp
+C:\Development\C++Projects\TicTacToe\Sodoku\SodokuBoard.cpp(10,17): error C2672: 'SodokuBoard::isValidLine': no matching overloaded function found
+C:\Development\C++Projects\TicTacToe\Sodoku\SodokuBoard.cpp(10,57): error C2975: 'get': invalid template argument for 'SodokuBoard::isValidLine', expected compile-time constant expression
+C:\Development\C++Projects\TicTacToe\Sodoku\SodokuBoard.h(20): message : see declaration of 'get'

@@ -34,12 +34,19 @@ public:
 		board[(input.row * rows) + input.col] = piece;
 	}
 
+	bool isInRowRange(char rowNum) const
+	{
+		return (-1 < rowNum && rowNum < rows);
+	}
+
+	bool isInColRange(char colNum) const
+	{
+		return (-1 < colNum && colNum < cols);
+	}
+
 	virtual bool isValidCoords(Coords input) const
 	{
-		bool isValid = (-1 < input.row && input.row < rows);
-		isValid = (isValid && (-1 < input.col && input.col < cols));
-
-		return isValid;
+		return (isInRowRange(input.row) && isInColRange(input.col));;
 	}
 
 	bool isFull(T piece) const
@@ -95,7 +102,6 @@ public:
 	}
 
 protected:
-
 
 	T* board;
 	const int rows;

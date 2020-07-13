@@ -3,7 +3,6 @@
 
 enum GamePiece : char { BLANK = '-', Px = 'X', Po = 'O' };
 
-template class GameBoard<GamePiece>;
 
 class TTTBoard : public GameBoard<GamePiece>
 {
