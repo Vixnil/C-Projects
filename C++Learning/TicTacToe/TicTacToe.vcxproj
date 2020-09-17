@@ -293,7 +293,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
-    <ClCompile Include="TicTacToeBoard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TicTacToeBoard.h" />

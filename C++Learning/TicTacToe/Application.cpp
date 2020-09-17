@@ -3,33 +3,33 @@
 #include "Instrumentor.h"
 
 typedef void(*AiDifficulty)(TTTBoard&, GamePiece&);
-typedef void(*NumMod)(int&);
-typedef Coords(*BoardOrientation)(TTTBoard&, int, int, GamePiece);
+typedef void(*NumMod)(size_t&);
+typedef Coords(*BoardOrientation)(TTTBoard&, size_t, size_t, GamePiece);
 
 Coords promptUserForCoord(TTTBoard&);
-Coords getWinningMove(TTTBoard& gb, GamePiece playerPiece, int acceptableBlanks);
+Coords getWinningMove(TTTBoard& gb, GamePiece playerPiece, size_t acceptableBlanks);
 template<NumMod mod>
-Coords getDiagMove(TTTBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks);
+Coords getDiagMove(TTTBoard& gb, GamePiece piece, size_t rowInit, size_t acceptableBlanks);
 template<BoardOrientation board>
-Coords getStraightMove(TTTBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks);
+Coords getStraightMove(TTTBoard& gb, GamePiece piece, size_t rowNum, size_t colNum, size_t acceptableBlanks);
 bool isWinningPiece(TTTBoard&, GamePiece);
 template<NumMod modifier>
-bool isDiagonalWin(TTTBoard&, GamePiece, int rowInit);
+bool isDiagonalWin(TTTBoard&, GamePiece, size_t rowInit);
 template<BoardOrientation board>
-bool isStraightWin(TTTBoard&, GamePiece, int rowNum, int colNum);
-void run2PlayerGame(char);
-void run1PlayerGame(char);
+bool isStraightWin(TTTBoard&, GamePiece, size_t rowNum, size_t colNum);
+void run2PlayerGame(size_t);
+void run1PlayerGame(size_t);
 void displayBoard(TTTBoard&);
 void doPlayerTurn(TTTBoard&, GamePiece);
-void increamentNum(int&);
-void decreamentNum(int&);
-Coords rowTop(TTTBoard&, int rowIndex, int colIndex, GamePiece);
-Coords colTop(TTTBoard&, int rowIndex, int colIndex, GamePiece);
+void increamentNum(size_t&);
+void decreamentNum(size_t&);
+Coords rowTop(TTTBoard&, size_t rowIndex, size_t colIndex, GamePiece);
+Coords colTop(TTTBoard&, size_t rowIndex, size_t colIndex, GamePiece);
 void doAiImpossible(TTTBoard&, GamePiece&);
 void doAiMedium(TTTBoard&, GamePiece&);
 void doAiEasy(TTTBoard&, GamePiece&);
 char promptUser(const char* message, const char* acceptableValues, bool clearbeforePrompt);
-int promptUser(const char* message, const int minRange, const int maxRange, bool clearbeforePrompt);
+size_t promptUser(const char* message, const size_t minRange, const size_t maxRange, bool clearbeforePrompt);
 void notifyUser(const char*);
 
 const Coords BAD_MOVE;
@@ -49,8 +49,8 @@ int main()
 		notifyUser("Welcome to TicTacToe!\n=====================");
 		
 		char sizeOption = promptUser("Please select a board size: Regular, Large, or Extreme", "RrLlEe", false);
-		char size = 0;
-		int option = promptUser("Please select a gamemode: Single Player (1), or Two player (2)", 1, 2, false);
+		size_t size = 0;
+		size_t option = promptUser("Please select a gamemode: Single Player (1), or Two player (2)", 1, 2, false);
 
 		if (sizeOption == 'R' || sizeOption == 'r')
 		{
@@ -95,14 +95,14 @@ bool isWinningPiece(TTTBoard& gb, GamePiece piece)
 }
 
 template<NumMod mod>
-Coords getDiagMove(TTTBoard& gb, GamePiece piece, int rowInit, int acceptableBlanks)
+Coords getDiagMove(TTTBoard& gb, GamePiece piece, size_t rowInit, size_t acceptableBlanks)
 {
 	PROFILE_FUNCTION();
 	Coords winMove;
 
-	int rowIndex = rowInit;
-	int colIndex = 0;
-	int numBlank = 0;
+	size_t rowIndex = rowInit;
+	size_t colIndex = 0;
+	size_t numBlank = 0;
 
 	do
 	{
@@ -130,17 +130,17 @@ Coords getDiagMove(TTTBoard& gb, GamePiece piece, int rowInit, int acceptableBla
 }
 
 template<BoardOrientation boardCheck>
-Coords getStraightMove(TTTBoard& gb, GamePiece piece, int rowNum, int colNum, int acceptableBlanks)
+Coords getStraightMove(TTTBoard& gb, GamePiece piece, size_t rowNum, size_t colNum, size_t acceptableBlanks)
 {
 	PROFILE_FUNCTION();
 	Coords winMove;
 
-	for (int rowIndex = 0; rowIndex < rowNum; rowIndex++)
+	for (size_t rowIndex = 0; rowIndex < rowNum; rowIndex++)
 	{
-		int numFound = 0;
+		size_t numFound = 0;
 		bool foundEnemy = false;
 
-		for (int colIndex = 0; colIndex < colNum; colIndex++)
+		for (size_t colIndex = 0; colIndex < colNum; colIndex++)
 		{
 			Coords tempMove = boardCheck(gb, rowIndex, colIndex, piece);
 
@@ -170,12 +170,12 @@ Coords getStraightMove(TTTBoard& gb, GamePiece piece, int rowNum, int colNum, in
 }
 
 template<NumMod mod>
-bool isDiagonalWin(TTTBoard& gb, GamePiece piece, int rowInit)
+bool isDiagonalWin(TTTBoard& gb, GamePiece piece, size_t rowInit)
 {
 	PROFILE_FUNCTION();
-	int rowIndex = rowInit;
-	int colIndex = 0;
-	int numFound = 0;
+	size_t rowIndex = rowInit;
+	size_t colIndex = 0;
+	size_t numFound = 0;
 
 	do
 	{
@@ -187,14 +187,14 @@ bool isDiagonalWin(TTTBoard& gb, GamePiece piece, int rowInit)
 }
 
 template<BoardOrientation board>
-bool isStraightWin(TTTBoard& gb, GamePiece piece, int rowNum, int colNum)
+bool isStraightWin(TTTBoard& gb, GamePiece piece, size_t rowNum, size_t colNum)
 {
 	PROFILE_FUNCTION();
-	for (int rowIndex = 0; rowIndex < rowNum; rowIndex++)
+	for (size_t rowIndex = 0; rowIndex < rowNum; rowIndex++)
 	{
-		int numFound = 0;
+		size_t numFound = 0;
 
-		for (int colIndex = 0; colIndex < colNum; colIndex++)
+		for (size_t colIndex = 0; colIndex < colNum; colIndex++)
 		{
 			numFound = (board(gb, rowIndex, colIndex, piece) != BAD_MOVE)? (numFound + 1) : numFound;
 		}
@@ -215,7 +215,7 @@ void displayBoard(TTTBoard& gb)
 	system("CLS");
 
 	std::cout << "|=";
-	for (int ci = 0; ci < gb.GetNumCol(); ci++)
+	for (size_t ci = 0; ci < gb.GetNumCol(); ci++)
 	{
 		if (ci + 1 == gb.GetNumCol())
 		{
@@ -230,10 +230,10 @@ void displayBoard(TTTBoard& gb)
 	std::cout << "|";
 	std::cout << std::endl;
 
-	for (int ri = 0; ri < gb.GetNumRow(); ri++)
+	for (size_t ri = 0; ri < gb.GetNumRow(); ri++)
 	{
 		std::cout << "| ";
-		for (int ci = 0; ci < gb.GetNumCol(); ci++)
+		for (size_t ci = 0; ci < gb.GetNumCol(); ci++)
 		{
 			if (ci + 1 == gb.GetNumCol())
 			{
@@ -247,7 +247,7 @@ void displayBoard(TTTBoard& gb)
 		std::cout << "|";
 		std::cout << std::endl;
 		std::cout << "|=";
-		for (int ci = 0; ci < gb.GetNumCol(); ci++)
+		for (size_t ci = 0; ci < gb.GetNumCol(); ci++)
 		{
 			if (ci + 1 == gb.GetNumCol())
 			{
@@ -300,7 +300,7 @@ void doPlayerTurn(TTTBoard& gb, GamePiece playerPiece)
 	} while (promptAgain);
 }
 
-Coords getWinningMove(TTTBoard& gb, GamePiece playerPiece, int acceptableBlanks)
+Coords getWinningMove(TTTBoard& gb, GamePiece playerPiece, size_t acceptableBlanks)
 {
 	PROFILE_FUNCTION();
 	Coords winMove = getDiagMove<increamentNum>(gb, playerPiece, 0, acceptableBlanks);
@@ -334,8 +334,8 @@ void doAiImpossible(TTTBoard& gb, GamePiece& playerPiece)
 
 		if (move == BAD_MOVE)
 		{
-			int middleRow = ((gb.GetNumRow() - 1) / 2);
-			int middleCol = ((gb.GetNumCol() - 1) / 2);
+			size_t middleRow = ((gb.GetNumRow() - 1) / 2);
+			size_t middleCol = ((gb.GetNumCol() - 1) / 2);
 			if (gb.getAt(middleRow, middleCol) == BLANK)
 			{
 				move.col = middleCol;
@@ -366,7 +366,7 @@ void doAiImpossible(TTTBoard& gb, GamePiece& playerPiece)
 					}
 				}
 
-				int numBlanks = 2;
+				size_t numBlanks = 2;
 
 				while(numBlanks < gb.GetNumRow() && move == BAD_MOVE)
 					move = getWinningMove(gb, playerPiece, numBlanks++);
@@ -448,7 +448,7 @@ AiDifficulty promptUserForDifficulty()
 	} while (notValid);
 }
 
-void run2PlayerGame(char size)
+void run2PlayerGame(size_t size)
 {
 	PROFILE_FUNCTION();
 	TTTBoard gb(size, size, BLANK);
@@ -477,10 +477,10 @@ void run2PlayerGame(char size)
 	} while (runAgain);
 }
 
-void run1PlayerGame(char size)
+void run1PlayerGame(size_t size)
 {
 	PROFILE_FUNCTION();
-	TTTBoard gb = TTTBoard(size, size, BLANK);
+	TTTBoard gb(size, size, BLANK);
 	GamePiece currPlayer = Px;
 	GamePiece human = ((rand() % 2) == 1)? Px : Po;
 	AiDifficulty doAiTurn = promptUserForDifficulty();
@@ -514,17 +514,17 @@ void run1PlayerGame(char size)
 	} while (runAgain);
 }
 
-void increamentNum(int& number)
+void increamentNum(size_t& number)
 {
 	number++;
 }
 
-void decreamentNum(int& number)
+void decreamentNum(size_t& number)
 {
 	number--;
 }
 
-Coords rowTop(TTTBoard& gb, int rowIndex, int colIndex, GamePiece value)
+Coords rowTop(TTTBoard& gb, size_t rowIndex, size_t colIndex, GamePiece value)
 {
 	Coords position;
 
@@ -537,7 +537,7 @@ Coords rowTop(TTTBoard& gb, int rowIndex, int colIndex, GamePiece value)
 	return position;
 }
 
-Coords colTop(TTTBoard& gb, int rowIndex, int colIndex, GamePiece value)
+Coords colTop(TTTBoard& gb, size_t rowIndex, size_t colIndex, GamePiece value)
 {
 	Coords position;
 
@@ -563,7 +563,7 @@ char promptUser(const char* message, const char* acceptableValues, bool clearbef
 		std::cout << message << std::endl;
 		std::cout << "Acceptable values: (";
 
-		for(int index = 0; acceptableValues[index] != '\0'; index++)
+		for(size_t index = 0; acceptableValues[index] != '\0'; index++)
 		{
 			if (acceptableValues[index + 1] == '\0')
 			{
@@ -578,7 +578,7 @@ char promptUser(const char* message, const char* acceptableValues, bool clearbef
 		userValue = std::cin.get();
 		std::cin.ignore();
 
-		for (int index = 0; acceptableValues[index] != '\0'; index++)
+		for (size_t index = 0; acceptableValues[index] != '\0'; index++)
 		{
 			if (acceptableValues[index] == userValue)
 			{
@@ -591,10 +591,10 @@ char promptUser(const char* message, const char* acceptableValues, bool clearbef
 	} while (true);
 }
 
-int promptUser(const char* message, const int minRange, const int maxRange, bool clearbeforePrompt)
+size_t promptUser(const char* message, const size_t minRange, const size_t maxRange, bool clearbeforePrompt)
 {
 	PROFILE_FUNCTION();
-	int userValue;
+	size_t userValue;
 
 	do
 	{
@@ -604,7 +604,7 @@ int promptUser(const char* message, const int minRange, const int maxRange, bool
 		std::cout << message << std::endl;
 		std::cout << "Acceptable values: (";
 
-		for (int index = minRange; index < maxRange; index++)
+		for (size_t index = minRange; index < maxRange; index++)
 		{
 			std::cout << index << ", ";
 		}
@@ -612,6 +612,8 @@ int promptUser(const char* message, const int minRange, const int maxRange, bool
 		std::cout << maxRange << ")" << std::endl;
 		std::cin >> userValue;
 		std::cin.ignore();
+
+
 
 		if (minRange - 1 < userValue && userValue < maxRange + 1)
 		{
